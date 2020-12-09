@@ -5,37 +5,16 @@ import java.net.ServerSocket;
 import java.net.UnknownHostException;
 
 /**
+ * An IP address/port pair which represents a connection address to a server.
+ * <p>
+ * This interface is designed to complement {@link ServerImplementation}s,
+ * and it is not based upon any standard address definitions or conventions.
  *
+ * @author Utkarsh Priyam
+ * @version December 8, 2020
+ * @see ServerImplementation
  */
-public abstract class NetworkAddress {
-    private final InetAddress ADDRESS;
-    private final int PORT;
-
-    /**
-     * Constructs a new {@code NetworkAddress} corresponding to the specified {@link ServerSocket}.
-     * <p>
-     * The default implementation prioritizes {@link InetAddress#getLocalHost()} over
-     * {@link ServerSocket#getInetAddress()} for defining the server's IP address. More
-     * details can be found with the {@link #getAddress()} method.
-     *
-     * @param serverSocket The {@code ServerSocket} whose IP address to identify
-     * @see #getAddress()
-     * @see InetAddress#getLocalHost()
-     * @see ServerSocket
-     * @see ServerSocket#getInetAddress()
-     */
-    public NetworkAddress(ServerSocket serverSocket) {
-        InetAddress temp;
-        try {
-            temp = InetAddress.getLocalHost();
-        } catch (
-                UnknownHostException ignored) {
-            temp = serverSocket.getInetAddress();
-        }
-        ADDRESS = temp;
-        PORT = serverSocket.getLocalPort();
-    }
-
+public interface NetworkAddress {
     /**
      * Returns the IP address of this {@code NetworkAddress}.
      * <p>
@@ -45,13 +24,10 @@ public abstract class NetworkAddress {
      * {@link InetAddress#getLocalHost()} or another similar method.
      *
      * @return A usable form of the IP address of this {@code NetworkAddress}
-     * @see #NetworkAddress(ServerSocket)
      * @see InetAddress#getLocalHost()
      * @see ServerSocket#getInetAddress()
      */
-    public InetAddress getAddress() {
-        return ADDRESS;
-    }
+    InetAddress getAddress();
     /**
      * Returns the port of this {@code NetworkAddress}.
      * <p>
@@ -60,12 +36,5 @@ public abstract class NetworkAddress {
      *
      * @return The connected socket of this {@code NetworkAddress}
      */
-    public int getPort() {
-        return PORT;
-    }
-
-    @Override
-    public String toString() {
-        return ADDRESS + ":" + PORT;
-    }
+    int getPort();
 }

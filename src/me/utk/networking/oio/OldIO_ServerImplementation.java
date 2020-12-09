@@ -1,6 +1,5 @@
 package me.utk.networking.oio;
 
-import me.utk.networking.NetworkAddress;
 import me.utk.networking.ServerImplementation;
 import me.utk.networking.ServerSideClient;
 import me.utk.util.misc.ThreadUtil;
@@ -14,7 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-class OldIO_ServerImplementation extends ServerImplementation {
+class OldIO_ServerImplementation implements ServerImplementation {
     // ---------------------------------------- PRIVATE INSTANCE VARIABLES ---------------------------------------- //
 
     private final ServerSocket SERVER_SOCKET;
@@ -32,7 +31,7 @@ class OldIO_ServerImplementation extends ServerImplementation {
 
     private final ScheduledExecutorService CLIENT_MESSAGE_COLLECTION_SERVICE;
 
-    private final NetworkAddress ADDRESS;
+    private final OldIO_NetworkAddress ADDRESS;
 
     // ---------------------------------------- PACKAGE-PRIVATE CONSTRUCTOR ---------------------------------------- //
 
@@ -189,11 +188,10 @@ class OldIO_ServerImplementation extends ServerImplementation {
         );
 
         /*
-         * Create a {@link me.utk.networking.Server.NetworkAddress}
+         * Create a {@link OldIO_NetworkAddress}
          * for this {@link me.utk.networking.Server.ServerImplementation}
          */
-        ADDRESS = new NetworkAddress(SERVER_SOCKET) {
-        };
+        ADDRESS = new OldIO_NetworkAddress(SERVER_SOCKET);
     }
 
     // ---------------------------------------- PRIVATE HELPER METHODS ---------------------------------------- //
@@ -254,7 +252,7 @@ class OldIO_ServerImplementation extends ServerImplementation {
     // ---------------------------------------- OVERRIDDEN METHODS ---------------------------------------- //
 
     @Override
-    public NetworkAddress getAddress() {
+    public OldIO_NetworkAddress getAddress() {
         return ADDRESS;
     }
 
@@ -321,7 +319,7 @@ class OldIO_ServerImplementation extends ServerImplementation {
         closeAllConnections(OldIO_MessageUtil.CONNECTION_CLOSED);
     }
     @Override
-    public void killServer() {
+    public void closeServer() {
         closeAllConnections(OldIO_MessageUtil.SERVER_CLOSED);
         connectionThreadTerminationCondition = true;
         VERIFICATION_SERVICE.shutdownNow();

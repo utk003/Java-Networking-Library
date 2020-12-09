@@ -4,7 +4,7 @@ import me.utk.networking.ServerSideClient;
 
 import java.net.Socket;
 
-class OldIO_ServerSideClient extends ServerSideClient {
+class OldIO_ServerSideClient implements ServerSideClient {
     private final Socket SOCKET;
     private final OldIO_MessageBuilder BUILDER;
 
@@ -13,14 +13,13 @@ class OldIO_ServerSideClient extends ServerSideClient {
         BUILDER = new OldIO_MessageBuilder();
     }
 
-    @Override
-    public Socket getSocket() {
+    Socket getSocket() {
         return SOCKET;
     }
 
     @Override
     public void sendMessages(String... messages) {
-        OldIO_Util.sendMessages(getSocket(), messages);
+        OldIO_Util.sendMessages(SOCKET, messages);
     }
 
     @Override

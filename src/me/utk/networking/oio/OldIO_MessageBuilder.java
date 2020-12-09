@@ -2,7 +2,7 @@ package me.utk.networking.oio;
 
 import java.util.LinkedList;
 
-class OldIO_MessageBuilder extends me.utk.networking.MessageBuilder {
+class OldIO_MessageBuilder implements me.utk.networking.MessageBuilder {
     private final LinkedList<String[]> MESSAGES = new LinkedList<>();
     private final LinkedList<String> LINES = new LinkedList<>();
 

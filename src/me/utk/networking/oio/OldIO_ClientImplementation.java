@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-class OldIO_ClientImplementation extends ClientImplementation {
+class OldIO_ClientImplementation implements ClientImplementation {
     // ---------------------------------------- PRIVATE INSTANCE VARIABLES ---------------------------------------- //
 
     private Socket client = null;
@@ -22,9 +22,12 @@ class OldIO_ClientImplementation extends ClientImplementation {
 
     private final ScheduledExecutorService SERVER_MESSAGE_COLLECTION_SERVICE;
 
+    private int connectionTimeoutSeconds;
+
     // ---------------------------------------- PACKAGE-PRIVATE CONSTRUCTOR ---------------------------------------- //
 
     OldIO_ClientImplementation() {
+        setConnectionTimeout(0);
         CONNECTION_VERIFICATION_SERVICE = Executors.newSingleThreadScheduledExecutor();
         CONNECTION_VERIFICATION_SERVICE.scheduleAtFixedRate(
                 () -> {
@@ -41,8 +44,8 @@ class OldIO_ClientImplementation extends ClientImplementation {
                         synchronized (CLIENT_IMPLEMENTATION_LOCKER) {
                             CLIENT_IMPLEMENTATION_LOCKER.notifyAll();
                         }
-                    } else if (++timeoutCounter >= 300) { // 5 mins
-                        closeClient();
+                    } else if (++timeoutCounter >= connectionTimeoutSeconds) { // default value -> 300 secs = 5 mins
+                        closeSocket();
                         isVerifyingConnection = false;
                         synchronized (CLIENT_IMPLEMENTATION_LOCKER) {
                             CLIENT_IMPLEMENTATION_LOCKER.notifyAll();
@@ -60,7 +63,7 @@ class OldIO_ClientImplementation extends ClientImplementation {
                     if (client != null) {
                         timeoutCounter = OldIO_Util.readMessages(client, builder, timeoutCounter);
                         if (timeoutCounter > 300)
-                            closeClient();
+                            closeSocket();
                     }
                 },
                 0L,
@@ -75,7 +78,7 @@ class OldIO_ClientImplementation extends ClientImplementation {
         return client != null && OldIO_MessageUtil.CONNECTION_CONFIRMATION.toString().equals(OldIO_Util.readLine(client));
     }
 
-    private void closeClient() {
+    private void closeSocket() {
         if (client != null) {
             OldIO_Util.closeSocketUntilSuccess(client);
             client = null;
@@ -96,23 +99,10 @@ class OldIO_ClientImplementation extends ClientImplementation {
     }
 
     @Override
-    public boolean connect(String addressAndPort) {
-        return connect(addressAndPort, "");
+    public void setConnectionTimeout(int timeout) {
+        connectionTimeoutSeconds = timeout <= 0 ? 300 : timeout / 1000 + 1;
     }
-    @Override
-    public boolean connect(String addressAndPort, String passcode) {
-        String[] split = addressAndPort.split(":");
-        if (split.length != 2)
-            throw new IllegalArgumentException(addressAndPort + " is not a valid network address/port pair");
 
-        int port;
-        try {
-            port = Integer.parseInt(split[1]);
-        } catch (NumberFormatException ignored) {
-            throw new IllegalArgumentException(split[1] + " is not a valid network port");
-        }
-        return connect(split[0], port, passcode);
-    }
     @Override
     public boolean connect(String address, int port) {
         return connect(address, port, "");
@@ -121,7 +111,7 @@ class OldIO_ClientImplementation extends ClientImplementation {
     public boolean connect(String address, int port, String passcode) {
         if (client != null) {
             sendMessages("" + OldIO_MessageUtil.CONNECTION_CLOSED);
-            closeClient();
+            closeSocket();
         }
         try {
             client = new Socket(address, port);
@@ -153,10 +143,10 @@ class OldIO_ClientImplementation extends ClientImplementation {
     }
 
     @Override
-    public void killClient() {
+    public void closeClient() {
         CONNECTION_VERIFICATION_SERVICE.shutdownNow();
         SERVER_MESSAGE_COLLECTION_SERVICE.shutdownNow();
         sendMessages("" + OldIO_MessageUtil.CONNECTION_CLOSED);
-        closeClient();
+        closeSocket();
     }
 }
